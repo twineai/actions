@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/twineai/actionserver/tools/deploy-actions/action"
+	"github.com/twineai/actions/tools/deploy-actions/action"
 )
 
 func NewDeploymentManager(

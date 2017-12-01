@@ -16,13 +16,13 @@ import (
 	"google.golang.org/api/iterator"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/twineai/actionserver/tools/deploy-actions/action"
-	"github.com/twineai/actionserver/tools/deploy-actions/deploymentmgr"
-	"github.com/twineai/actionserver/tools/deploy-actions/servicemgr"
+	"github.com/twineai/actions/tools/deploy-actions/action"
+	"github.com/twineai/actions/tools/deploy-actions/deploymentmgr"
+	"github.com/twineai/actions/tools/deploy-actions/servicemgr"
 )
 
 func isAction(objAttrs *storage.ObjectAttrs) bool {
-	return filepath.Ext(objAttrs.Name) == ".zip"
+	return filepath.Ext(objAttrs.Name) == ".tgz"
 }
 
 func actionName(objAttrs *storage.ObjectAttrs) string {

@@ -41,22 +41,23 @@ esac
 BASE_DIR=$(pwd)
 
 for RAW_ACTION in "$@"; do
-  ACTION="${RAW_ACTION%/}"
-  echo "Packaging action: ${ACTION}"
+  ACTION_DIR="${RAW_ACTION%/}"
+  ACTION_NAME=$(basename "${ACTION_DIR}")
+  echo "Packaging action: ${ACTION_NAME}"
 
   cd "${BASE_DIR}"
 
-  if [[ ! -d "${ACTION}" ]]; then
-    echoerr "action ${ACTION} is not a directory"
+  if [[ ! -d "${ACTION_DIR}" ]]; then
+    echoerr "action ${ACTION_DIR} is not a directory"
     usage
     exit 1
   fi
 
-  cd "${ACTION}"
+  cd "${ACTION_DIR}"
   find . \( -name node_modules -o -name .DS_Store \) -prune -o -type f -exec \
-    echo ${TARCMD} -C "${ACTION}" \
+    ${TARCMD} \
         --sort=name \
         --mtime="1970-01-01" \
         --owner=0 --group=0 --numeric-owner \
-        -cf - {} \+ | gzip -n > "${BASE_DIR}/${ACTION}.tgz"
+        -cf - {} \+ | gzip -n > "${BASE_DIR}/${ACTION_NAME}.tgz"
 done

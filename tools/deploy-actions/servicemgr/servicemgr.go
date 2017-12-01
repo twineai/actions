@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/pkg/errors"
-	"github.com/twineai/actionserver/tools/deploy-actions/action"
+	"github.com/twineai/actions/tools/deploy-actions/action"
 	corev1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
