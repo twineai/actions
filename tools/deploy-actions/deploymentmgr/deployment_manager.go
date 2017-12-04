@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os/exec"
 
 	"github.com/pkg/errors"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
@@ -14,8 +15,40 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
 
+	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/twineai/actions/tools/deploy-actions/action"
 )
+
+var serverOnce sync.Once
+var serverVersion string
+
+func getServerVersion() string {
+	serverOnce.Do(func() {
+		serverVersion := FlagActionServerVersion
+		if serverVersion == "" {
+			cmd := fmt.Sprintf(`gcloud container images list-tags %s --filter="tags!=latest" --limit=1 | tail -n 1 | awk '{ print $2; }'`, FlagActionServerImageName)
+			out, err := exec.Command("bash", "-ec", cmd).Output()
+			if err != nil {
+				log.Fatalf("Unable to get server version: %s", err)
+			}
+
+			rawTags := strings.Split(strings.TrimSpace(string(out)), ",")
+			for _, tag := range rawTags {
+				normalized := strings.TrimSpace(tag)
+				if normalized != "latest" {
+					log.Printf("No server version provided, using '%s'", normalized)
+					serverVersion = normalized
+					return
+				}
+			}
+		}
+	})
+
+	return serverVersion
+}
 
 func NewDeploymentManager(
 	kubeClient kubernetes.Interface,
@@ -30,7 +63,7 @@ func NewDeploymentManager(
 		bucketName:           bucketName,
 		serverImageName:      FlagActionServerImageName,
 		serverSetupImageName: FlagActionServerSetupImageName,
-		serverVersion:        FlagActionServerVersion,
+		serverVersion:        getServerVersion(),
 	}
 }
 
