@@ -72,12 +72,16 @@ func main() {
 
 	ns := strings.TrimSpace(FlagNamespace)
 	if len(ns) == 0 {
-		log.Fatalf("Argument 'namespace' is required")
+		fmt.Fprintln(os.Stderr, "Argument 'namespace' is required")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	bucketName := strings.TrimSpace(FlagBucket)
 	if len(bucketName) == 0 {
-		log.Fatalf("Argument 'bucket' is required")
+		fmt.Fprintln(os.Stderr, "Argument 'namespace' is required")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	log.Printf("Bucket: %s", bucketName)

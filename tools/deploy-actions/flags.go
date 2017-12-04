@@ -30,6 +30,6 @@ func init() {
 		"Path to the GCP service account key file")
 
 	flag.IntVar(
-		&FlagWorkerCount, "worker-count", 1,
+		&FlagWorkerCount, "worker-count", 3,
 		"Number of workers to run")
 }

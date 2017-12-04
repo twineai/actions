@@ -65,13 +65,6 @@ func (mgr *deploymentManager) Run(ctx context.Context) (err error) {
 		log.Printf("Creating deployment for action: %s", mgr.action.Name)
 		return mgr.createDeployment(ctx)
 	} else {
-		txt, err := json.Marshal(old)
-		if err != nil {
-			return err
-		}
-
-		log.Printf("updating existing: %s", string(txt))
-
 		return mgr.updateDeployment(ctx, old)
 	}
 
@@ -123,7 +116,12 @@ func (mgr *deploymentManager) createDeployment(ctx context.Context) error {
 		return err
 	}
 
-	log.Printf("Created deployment: %v", result)
+	txt, err := json.Marshal(result)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Created deployment for action '%s': %s", mgr.action.Name, string(txt))
 	return nil
 }
 
@@ -164,7 +162,12 @@ func (mgr *deploymentManager) updateDeployment(
 		return err
 	}
 
-	log.Printf("Updated deployment for Action '%s': %v", mgr.action.Name, result)
+	txt, err := json.Marshal(result)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Updated deployment for Action '%s': %s", mgr.action.Name, string(txt))
 	return nil
 }
 
