@@ -11,7 +11,7 @@ const packageTemplateStr = `
 `
 
 const indexTemplateStr = `
-module.exports["{{ .ActionName }}"] = function () {
-  return "Hello from {{ .ActionName }}!!";
+module.exports["{{ .ActionName }}"] = function (ctx, req) {
+  ctx.speak("Hello from {{ .ActionName }}!!");
 };
 `

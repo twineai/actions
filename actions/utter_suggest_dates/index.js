@@ -1,4 +1,4 @@
 
-module.exports["utter_suggest_dates"] = function () {
-  return "Hello from utter_suggest_dates!!";
+module.exports["utter_suggest_dates"] = function (ctx, req) {
+  ctx.speak("Hello from utter_suggest_dates!!");
 };

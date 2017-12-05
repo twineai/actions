@@ -1,4 +1,4 @@
 
-module.exports["utter_todo"] = function () {
-  return "Hello from utter_todo!!";
+module.exports["utter_todo"] = function (ctx, req) {
+  ctx.speak("Hello from utter_todo!!");
 };
