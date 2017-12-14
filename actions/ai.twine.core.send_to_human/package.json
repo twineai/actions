@@ -1,0 +1,8 @@
+
+{
+  "name": "ai.twine.core.send_to_human",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+  }
+}
