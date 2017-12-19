@@ -1,0 +1,3 @@
+[submodule "lib/action-lib-service"]
+	path = lib/action-lib-service
+	url = git@github.com:twineai/action-lib-service.git
