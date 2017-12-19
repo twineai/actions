@@ -1,29 +1,43 @@
 const moment = require("moment");
 const twine = require("twine-action-lib-service");
 
-module.exports["ai.twine.appointment.accept_proposal"] = function (ctx, req) {
+module.exports["ai.twine.appointment.confirm"] = function (ctx, req) {
   twine.registerModels(ctx);
-  let accepter = new Accepter(ctx.database, ctx.logger, ctx.models);
+  let confirmer = new Confirmer(ctx.database, ctx.logger, ctx.models);
 
   let appointmentKey = req.slots["found_appointment_data"];
   if (!appointmentKey) {
     throw new Error("Missing appointment key");
   }
 
-  return accepter
+  return confirmer
     .findAppointment({
       businessId: appointmentKey.businessId,
       calendarId: appointmentKey.calendarId,
       _id: appointmentKey.id
     })
     .then((appointment) => {
+      return Promise.all([
+        appointment,
+        confirmer.findService({ businessId: appointmentKey.businessId, _id: appointment.serviceId }),
+      ]);
+    })
+    .then(([appointment, service]) => {
+      appointment.pending = false;
+
+      return Promise.all([
+        appointment.save(),
+        service,
+      ]);
+    })
+    .then(([appointment, service]) => {
       const time = moment(appointment.startsAt);
       const dateTimeString = time.calendar();
-      ctx.speak(`We're available ${dateTimeString}.`, true);
+      ctx.speak(`You're confirmed for a ${service.title} ${dateTimeString}.`, true);
     });
 };
 
-class Accepter {
+class Confirmer {
   constructor(db, logger, models) {
     this.db = db;
     this.logger = logger;

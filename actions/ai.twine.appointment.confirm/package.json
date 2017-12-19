@@ -1,5 +1,5 @@
 {
-  "name": "ai.twine.appointment.suggest",
+  "name": "ai.twine.appointment.confirm",
   "version": "0.0.1",
   "private": true,
   "dependencies": {

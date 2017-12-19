@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "mongoose": "4.13.6"
+    "twine-action-lib-service": "git+ssh://git@github.com/twineai/action-lib-service.git#master"
   }
 }

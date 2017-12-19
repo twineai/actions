@@ -1,8 +1,11 @@
-
 {
   "name": "ai.twine.appointment.search",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "moment": "2.20.0",
+    "moment-round": "1.0.1",
+    "mongoose": "^4.13.6",
+    "twine-action-lib-service": "git+ssh://git@github.com/twineai/action-lib-service.git#master"
   }
 }

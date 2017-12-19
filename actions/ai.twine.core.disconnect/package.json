@@ -1,6 +1,6 @@
 
 {
-  "name": "ai.twine.appointment.recap_details",
+  "name": "ai.twine.core.disconnect",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
