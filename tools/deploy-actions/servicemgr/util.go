@@ -1,8 +1,8 @@
 package servicemgr
 
 import (
+	"crypto/sha1"
 	"fmt"
-	"strings"
 )
 
 //
@@ -13,7 +13,11 @@ import (
 // an update will need to delete and re-create deployments.
 
 func (mgr *serviceManager) serviceName() string {
-	normalized := strings.Replace(mgr.action.Name, ".", "-dot-", -1)
+	h := sha1.New()
+	h.Write([]byte(mgr.action.Name))
+	bs := h.Sum(nil)
+	normalized := fmt.Sprintf("%x", bs)
+
 	return fmt.Sprintf("action-%s", normalized)
 }
 

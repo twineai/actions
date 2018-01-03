@@ -23,12 +23,12 @@ import (
 )
 
 var serverOnce sync.Once
-var serverVersion string
+var _serverVersion string
 
 func getServerVersion() string {
 	serverOnce.Do(func() {
-		serverVersion := FlagActionServerVersion
-		if serverVersion == "" {
+		_serverVersion = FlagActionServerVersion
+		if _serverVersion == "" {
 			cmd := fmt.Sprintf(`gcloud container images list-tags %s --filter="tags!=latest" --limit=1 | tail -n 1 | awk '{ print $2; }'`, FlagActionServerImageName)
 			out, err := exec.Command("bash", "-ec", cmd).Output()
 			if err != nil {
@@ -40,14 +40,16 @@ func getServerVersion() string {
 				normalized := strings.TrimSpace(tag)
 				if normalized != "latest" {
 					log.Printf("No server version provided, using '%s'", normalized)
-					serverVersion = normalized
+					_serverVersion = normalized
 					return
 				}
 			}
 		}
+
+		log.Printf("Using server version: %s", _serverVersion)
 	})
 
-	return serverVersion
+	return _serverVersion
 }
 
 func NewDeploymentManager(
@@ -56,6 +58,8 @@ func NewDeploymentManager(
 	bucketName string,
 	action action.Action,
 ) *deploymentManager {
+	versionToUse := getServerVersion()
+
 	return &deploymentManager{
 		kubeClient:           kubeClient,
 		action:               action,
@@ -63,7 +67,7 @@ func NewDeploymentManager(
 		bucketName:           bucketName,
 		serverImageName:      FlagActionServerImageName,
 		serverSetupImageName: FlagActionServerSetupImageName,
-		serverVersion:        getServerVersion(),
+		serverVersion:        versionToUse,
 	}
 }
 
@@ -220,6 +224,15 @@ func (mgr *deploymentManager) applyUpdates(
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
+		{
+			Name: "github-ssh-keys",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName:  "builder-ssh-key",
+					DefaultMode: int32Ptr(0600),
+				},
+			},
+		},
 	}
 
 	mgr.populateSetupContainer(&deployment.Spec.Template.Spec.InitContainers[0])
@@ -236,6 +249,10 @@ func (mgr *deploymentManager) populateSetupContainer(container *corev1.Container
 		{
 			Name:      mgr.actionVolumeName(),
 			MountPath: mgr.actionVolumePath(),
+		},
+		{
+			Name:      "github-ssh-keys",
+			MountPath: "/root/.ssh",
 		},
 	}
 	container.Env = []corev1.EnvVar{
@@ -304,6 +321,16 @@ func (mgr *deploymentManager) buildBaseDeployment() *appsv1beta2.Deployment {
 					Annotations: map[string]string{},
 				},
 				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
+						{
+							Name: "github-ssh-keys",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: "builder-ssh-key",
+								},
+							},
+						},
+					},
 					InitContainers: []corev1.Container{
 						{
 							Name: "setup",

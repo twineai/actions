@@ -1,6 +1,7 @@
 package deploymentmgr
 
 import (
+	"crypto/sha1"
 	"fmt"
 )
 
@@ -22,11 +23,12 @@ func (mgr *deploymentManager) setupImageName() string {
 }
 
 func (mgr *deploymentManager) deploymentName() string {
-	return fmt.Sprintf("action-%s", mgr.action.Name)
-}
+	h := sha1.New()
+	h.Write([]byte(mgr.action.Name))
+	bs := h.Sum(nil)
+	normalized := fmt.Sprintf("%x", bs)
 
-func (mgr *deploymentManager) serviceName() string {
-	return fmt.Sprintf("action-%s", mgr.action.Name)
+	return fmt.Sprintf("action-%s", normalized)
 }
 
 func (mgr *deploymentManager) actionVolumeName() string {
