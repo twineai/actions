@@ -1,20 +1,16 @@
 const twine = require("twine-action-lib-service");
 const ngram = require("n-gram");
 
-module.exports["ai.twine.service.search"] = function (ctx, req) {
+module.exports["ai.twine.service.lookup"] = function (ctx, req) {
   twine.registerModels(ctx);
 
   const db = ctx.database
 
-  console.log(req);
-
-  ctx.logger.debug(`Doing service search: ${req}`)
-
-  let term = req.text;
-  if (req.slots && req.slots["service_name"]) {
-    term = req.slots["service_name"];
+  if (!req.slots) {
+    return;
   }
 
+  const term = req.slots["service_name"];
   if (!term) {
     return;
   }
@@ -33,7 +29,7 @@ module.exports["ai.twine.service.search"] = function (ctx, req) {
       }
     })
     .then((result) => {
-      if (result && result.score >= 7) {
+      if (result) {
         console.log(result);
         ctx.logger.debug(`Found service: ${result}`);
         ctx.setSlot("found_service_data", {
