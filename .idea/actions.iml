@@ -3,8 +3,12 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/actions/ai.twine.appointment.accept_proposal/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/actions/ai.twine.appointment.client_search/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/actions/ai.twine.appointment.provider_search/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludePattern pattern="actions/*/node_modules" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

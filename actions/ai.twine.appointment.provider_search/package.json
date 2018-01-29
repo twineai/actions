@@ -1,0 +1,9 @@
+{
+  "name": "ai.twine.appointment.provider_search",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "n-gram": "1.0.1",
+    "twine-action-lib-service": "git+ssh://git@github.com/twineai/action-lib-service.git#master"
+  }
+}

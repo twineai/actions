@@ -10,6 +10,7 @@ import (
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	corev1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
+	kuberesources "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
@@ -296,6 +297,16 @@ func (mgr *deploymentManager) populateServerContainer(container *corev1.Containe
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: 8080,
+		},
+	}
+	container.Resources = corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    kuberesources.MustParse("500m"),
+			corev1.ResourceMemory: kuberesources.MustParse("512Mi"),
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    kuberesources.MustParse("125m"),
+			corev1.ResourceMemory: kuberesources.MustParse("256Mi"),
 		},
 	}
 }

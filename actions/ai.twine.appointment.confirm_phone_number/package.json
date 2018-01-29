@@ -1,6 +1,6 @@
 
 {
-  "name": "ai.twine.appointment.request_phone_number",
+  "name": "ai.twine.appointment.confirm_phone_number",
   "version": "0.0.1",
   "private": true,
   "dependencies": {

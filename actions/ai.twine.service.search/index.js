@@ -33,16 +33,20 @@ module.exports["ai.twine.service.search"] = function (ctx, req) {
       }
     })
     .then((result) => {
-      if (result && result.score >= 7) {
-        console.log(result);
-        ctx.logger.debug(`Found service: ${result}`);
+      if (!result) {
+        ctx.logger.debug("Could not find service")
+        return;
+      }
+
+      ctx.logger.debug(`Found potential service [${result.id}]: ${result.title} = ${result.get('score')}`);
+
+      if (result.get('score') >= 7) {
         ctx.setSlot("found_service_data", {
-          module: "ai.twine.service",
           businessId: twine.TempConstants.businessId,
-          id: result.id,
+          _id: result.id,
         });
       } else {
-        ctx.logger.debug("Could not find service")
+        ctx.logger.debug("Score too low, skipping");
       }
     });
 };

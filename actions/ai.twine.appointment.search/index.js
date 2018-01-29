@@ -3,10 +3,12 @@ const moment = require("moment");
 const twine = require("twine-action-lib-service");
 require('moment-round');
 
+const nowThresholdMinutes = 30;
+
 module.exports["ai.twine.appointment.search"] = function (ctx, req) {
   twine.registerModels(ctx);
 
-  let serviceKey = req.slots["found_service_data"];
+  const serviceKey = req.slots["found_service_data"];
   if (!serviceKey) {
     throw new Error("Missing service key");
   }
@@ -15,6 +17,9 @@ module.exports["ai.twine.appointment.search"] = function (ctx, req) {
   if (!businessId) {
     throw new Error("Missing business ID");
   }
+
+  const previousAppointmentKey = req.slots["found_appointment_data"];
+
 
   const calendarId = new mongoose.Types.ObjectId("5a36db6b4c8d1b000547253e");
 
@@ -38,7 +43,16 @@ module.exports["ai.twine.appointment.search"] = function (ctx, req) {
     isExactSearch = (time.hour() > 0 || time.minute() > 0);
   }
 
-  return calendar.findService({ _id: serviceKey.id, businessId: businessId })
+  return Promise.resolve()
+    .then(() => {
+      if (!previousAppointmentKey) return;
+      return ctx.models.Appointment
+        .deleteOne(previousAppointmentKey)
+        .exec();
+    })
+    .then(() => {
+      return calendar.findService(serviceKey);
+    })
     .then((service) => {
 
       ctx.logger.info(`Looking for appointment ${time}`);
@@ -60,8 +74,8 @@ module.exports["ai.twine.appointment.search"] = function (ctx, req) {
         ctx.setSlot("found_appointment_match_type", entry.isExact ? "exact" : "suggested");
         ctx.setSlot("found_appointment_data", {
           businessId: businessId,
-          id: entry.appt.id,
           calendarId: entry.appt.calendarId.toString(),
+          _id: entry.appt.id,
         });
       } else {
         ctx.logger.debug(`No potential appointments found for ${moment(time).startOf("day")}`);
@@ -84,6 +98,7 @@ class Calendar {
   findService(serviceKey) {
     return this.models.Service
       .findOne(serviceKey)
+      .exec()
       .then((service) => {
         if (!service) {
           throw new Error("service not found");
@@ -105,7 +120,8 @@ class Calendar {
           $gte: startTime,
           $lt: endTime
         },
-      });
+      })
+      .exec();
   }
 
   findPotentialAppointment(initialTime, duration, service, isExact = true) {
@@ -113,9 +129,9 @@ class Calendar {
 
     this.logger.debug("Looking for appointment starting at: %s", time.inspect());
 
-    if (time.isBefore(moment().add(30, "minutes"))) {
-      this.logger.debug("  -> Before current time, moving to now +30min");
-      let newStart = moment().add(30, "minutes");
+    if (time.isBefore(moment().add(nowThresholdMinutes, "minutes"))) {
+      this.logger.debug("  -> Too soon, moving to now + %d min", nowThresholdMinutes);
+      let newStart = moment().add(nowThresholdMinutes, "minutes");
       return this.findPotentialAppointment(newStart, duration, service, false);
     }
 

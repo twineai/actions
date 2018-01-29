@@ -1,0 +1,8 @@
+{
+  "name": "ai.twine.core.get_current_phone_number",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "twine-action-lib-service": "git+ssh://git@github.com/twineai/action-lib-service.git#master"
+  }
+}

@@ -11,11 +11,7 @@ module.exports["ai.twine.appointment.accept_proposal"] = function (ctx, req) {
   }
 
   return accepter
-    .findAppointment({
-      businessId: appointmentKey.businessId,
-      calendarId: appointmentKey.calendarId,
-      _id: appointmentKey.id
-    })
+    .findAppointment(appointmentKey)
     .then((appointment) => {
       const time = moment(appointment.startsAt);
       const dateTimeString = time.calendar();

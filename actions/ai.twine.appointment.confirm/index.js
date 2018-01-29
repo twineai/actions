@@ -11,11 +11,7 @@ module.exports["ai.twine.appointment.confirm"] = function (ctx, req) {
   }
 
   return confirmer
-    .findAppointment({
-      businessId: appointmentKey.businessId,
-      calendarId: appointmentKey.calendarId,
-      _id: appointmentKey.id
-    })
+    .findAppointment(appointmentKey)
     .then((appointment) => {
       return Promise.all([
         appointment,
