@@ -54,7 +54,7 @@ for RAW_ACTION in "$@"; do
   fi
 
   cd "${ACTION_DIR}"
-  find . \( -name node_modules -o -name .DS_Store -o -name package-lock.json\) -prune -o -type f -exec \
+  find . \( -name node_modules -o -name .DS_Store -o -name package-lock.json \) -prune -o -type f -exec \
     ${TARCMD} \
         --sort=name \
         --mtime="1970-01-01" \
