@@ -306,7 +306,7 @@ func (mgr *deploymentManager) populateServerContainer(container *corev1.Containe
 		},
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    kuberesources.MustParse("125m"),
-			corev1.ResourceMemory: kuberesources.MustParse("256Mi"),
+			corev1.ResourceMemory: kuberesources.MustParse("192Mi"),
 		},
 	}
 }
