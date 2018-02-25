@@ -10,6 +10,7 @@ var (
 	FlagGCPCredentialsFile string
 	FlagBucket             string
 	FlagWorkerCount        int
+	FlagSingleInstance     bool
 )
 
 func init() {
@@ -32,4 +33,8 @@ func init() {
 	flag.IntVar(
 		&FlagWorkerCount, "worker-count", 3,
 		"Number of workers to run")
+
+	flag.BoolVar(
+		&FlagSingleInstance, "single-instance", true,
+		"Whether or not to deploy the actions as a single instance")
 }

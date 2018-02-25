@@ -3,6 +3,8 @@ package deploymentmgr
 import (
 	"crypto/sha1"
 	"fmt"
+
+	"github.com/twineai/actions/tools/deploy-actions/action"
 )
 
 func int32Ptr(i int32) *int32 { return &i }
@@ -23,12 +25,20 @@ func (mgr *deploymentManager) setupImageName() string {
 }
 
 func (mgr *deploymentManager) deploymentName() string {
+	if len(mgr.actions) > 1 {
+		return "actionserver"
+	} else {
+		return fmt.Sprintf("action-%s", mgr.actionNameHash(mgr.actions[0]))
+	}
+}
+
+func (mgr *deploymentManager) actionNameHash(a action.Action) string {
 	h := sha1.New()
-	h.Write([]byte(mgr.action.Name))
+	h.Write([]byte(a.Name))
 	bs := h.Sum(nil)
 	normalized := fmt.Sprintf("%x", bs)
 
-	return fmt.Sprintf("action-%s", normalized)
+	return normalized
 }
 
 func (mgr *deploymentManager) actionVolumeName() string {
@@ -41,9 +51,16 @@ func (mgr *deploymentManager) actionVolumePath() string {
 
 func (mgr *deploymentManager) deploymentLabels() map[string]string {
 	// If you change things here, you may need to update the service counterpart as well.
-	return map[string]string{
-		"app":          "actionserver",
-		"tier":         "actions",
-		"twine-action": mgr.action.Name,
+
+	result := map[string]string{
+		"app":  "actionserver",
+		"tier": "actions",
 	}
+
+	for _, action := range mgr.actions {
+		actionId := fmt.Sprintf("action.twine.ai/%s", mgr.actionNameHash(action))
+		result[actionId] = "true"
+	}
+
+	return result
 }

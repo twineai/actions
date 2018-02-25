@@ -37,7 +37,7 @@ func work(
 	kubeClient kubernetes.Interface,
 	ns string,
 	bucketName string,
-	action action.Action,
+	actions []action.Action,
 ) error {
 	workerCtx, _ := context.WithCancel(ctx)
 
@@ -45,16 +45,18 @@ func work(
 	case <-workerCtx.Done():
 		return workerCtx.Err()
 	default:
-		deploymentMgr := deploymentmgr.NewDeploymentManager(kubeClient, ns, bucketName, action)
+		deploymentMgr := deploymentmgr.NewDeploymentManager(kubeClient, ns, bucketName, actions)
 		err := deploymentMgr.Run(workerCtx)
 		if err != nil {
 			return err
 		}
 
-		serviceMgr := servicemgr.NewServiceManager(kubeClient, ns, bucketName, action)
-		err = serviceMgr.Run(workerCtx)
-		if err != nil {
-			return err
+		for _, action := range actions {
+			serviceMgr := servicemgr.NewServiceManager(kubeClient, ns, bucketName, action)
+			err = serviceMgr.Run(workerCtx)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -108,15 +110,32 @@ func main() {
 	}()
 
 	// Start our worker pool
-	for i := 0; i < FlagWorkerCount; i++ {
+	if FlagSingleInstance {
 		go func() {
-			for action := range actions {
-				wg.Add(1)
-				err := work(ctx, kubeClient, ns, bucketName, action)
-				errors <- err
-				wg.Done()
+			var tmp []action.Action = nil
+
+			wg.Add(1)
+
+			for a := range actions {
+				tmp = append(tmp, a)
 			}
+
+			err := work(ctx, kubeClient, ns, bucketName, tmp)
+			errors <- err
+
+			wg.Done()
 		}()
+	} else {
+		for i := 0; i < FlagWorkerCount; i++ {
+			go func() {
+				for a := range actions {
+					wg.Add(1)
+					err := work(ctx, kubeClient, ns, bucketName, []action.Action{a})
+					errors <- err
+					wg.Done()
+				}
+			}()
+		}
 	}
 
 	jobCount := 0
@@ -159,6 +178,10 @@ scheduleLoop:
 	}
 
 	if jobCount > 0 {
+		if FlagSingleInstance {
+			jobCount = 1
+		}
+
 		log.Printf("Waiting on %d operations to finish…", jobCount)
 	waitLoop:
 		for {

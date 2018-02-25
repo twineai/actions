@@ -2,6 +2,7 @@ package servicemgr
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/pkg/errors"
@@ -106,6 +107,7 @@ func (mgr *serviceManager) createService(ctx context.Context) error {
 
 func (mgr *serviceManager) buildBaseService() *corev1.Service {
 	labels := mgr.serviceLabels()
+	actionId := fmt.Sprintf("action.twine.ai/%s", mgr.actionNameHash())
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -115,7 +117,7 @@ func (mgr *serviceManager) buildBaseService() *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{
-				"twine-action": labels["twine-action"],
+				actionId: "true",
 			},
 			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{

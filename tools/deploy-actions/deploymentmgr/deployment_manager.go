@@ -20,6 +20,8 @@ import (
 	"strings"
 	"sync"
 
+	"sort"
+
 	"github.com/twineai/actions/tools/deploy-actions/action"
 )
 
@@ -57,13 +59,13 @@ func NewDeploymentManager(
 	kubeClient kubernetes.Interface,
 	namespace string,
 	bucketName string,
-	action action.Action,
+	actions []action.Action,
 ) *deploymentManager {
 	versionToUse := getServerVersion()
 
 	return &deploymentManager{
 		kubeClient:           kubeClient,
-		action:               action,
+		actions:              actions,
 		namespace:            namespace,
 		bucketName:           bucketName,
 		serverImageName:      FlagActionServerImageName,
@@ -75,7 +77,7 @@ func NewDeploymentManager(
 type deploymentManager struct {
 	kubeClient kubernetes.Interface
 
-	action               action.Action
+	actions              []action.Action
 	namespace            string
 	bucketName           string
 	serverVersion        string
@@ -90,7 +92,7 @@ type deploymentManager struct {
 func (mgr *deploymentManager) Run(ctx context.Context) (err error) {
 	defer func() {
 		if err != nil {
-			err = errors.Wrapf(err, "error configuring deployment for action '%s'", mgr.action.Name)
+			err = errors.Wrapf(err, "error configuring deployment for actions '%x'", mgr.actions)
 		}
 	}()
 
@@ -100,7 +102,7 @@ func (mgr *deploymentManager) Run(ctx context.Context) (err error) {
 	}
 
 	if kubeerrors.IsNotFound(err) {
-		log.Printf("Creating deployment for action: %s", mgr.action.Name)
+		log.Printf("Creating deployment for actions: %x", mgr.actions)
 		return mgr.createDeployment(ctx)
 	} else {
 		return mgr.updateDeployment(ctx, old)
@@ -159,7 +161,7 @@ func (mgr *deploymentManager) createDeployment(ctx context.Context) error {
 		return err
 	}
 
-	log.Printf("Created deployment for action '%s': %s", mgr.action.Name, string(txt))
+	log.Printf("Created deployment for actions '%s': %s", mgr.actions, string(txt))
 	return nil
 }
 
@@ -186,7 +188,7 @@ func (mgr *deploymentManager) updateDeployment(
 	}
 
 	if len(patch) == 0 || string(patch) == "{}" {
-		log.Printf("Deployment up to date for Action: %s", mgr.action.Name)
+		log.Printf("Deployment up to date for Actions: %x", mgr.actions)
 		return nil
 	}
 
@@ -205,7 +207,7 @@ func (mgr *deploymentManager) updateDeployment(
 		return err
 	}
 
-	log.Printf("Updated deployment for Action '%s': %s", mgr.action.Name, string(txt))
+	log.Printf("Updated deployment for Action '%s': %s", mgr.actions, string(txt))
 	return nil
 }
 
@@ -216,8 +218,7 @@ func (mgr *deploymentManager) applyUpdates(
 		deployment.Spec.Template.Annotations = map[string]string{}
 	}
 
-	deployment.Spec.Template.Annotations["twine.ai/twine-action-id"] = mgr.action.Id
-	deployment.Spec.Replicas = int32Ptr(1)
+	deployment.Spec.Replicas = int32Ptr(int32(FlagInstanceCount))
 	deployment.Spec.Template.Spec.Volumes = []corev1.Volume{
 		{
 			Name: mgr.actionVolumeName(),
@@ -265,11 +266,18 @@ func (mgr *deploymentManager) populateSetupContainer(container *corev1.Container
 			Name:  "ACTION_DIR",
 			Value: mgr.actionVolumePath(),
 		},
-		{
-			Name:  "ACTIONS",
-			Value: mgr.action.Name,
-		},
 	}
+
+	actionNames := make([]string, len(mgr.actions))
+	for i, action := range mgr.actions {
+		fmt.Printf("Handling action: %v\n", action)
+		actionNames[i] = action.Name
+	}
+
+	sort.Strings(actionNames)
+	container.Args = actionNames
+
+	fmt.Printf("Container args: %v\n", container.Args)
 }
 
 func (mgr *deploymentManager) populateServerContainer(container *corev1.Container) {
@@ -290,6 +298,10 @@ func (mgr *deploymentManager) populateServerContainer(container *corev1.Containe
 		{
 			Name:  "ACTION_DIR",
 			Value: mgr.actionVolumePath(),
+		},
+		{
+			Name:  "LOG_LEVEL",
+			Value: "debug",
 		},
 	}
 	container.Ports = []corev1.ContainerPort{

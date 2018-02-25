@@ -8,6 +8,7 @@ var (
 	FlagActionServerVersion        string
 	FlagActionServerImageName      string
 	FlagActionServerSetupImageName string
+	FlagInstanceCount              int
 )
 
 func init() {
@@ -24,4 +25,9 @@ func init() {
 		"action-server-setup-image-name",
 		"gcr.io/twine-180301/actionserver-setup",
 		"The name of the action server setup image to use")
+
+	flag.IntVar(
+		&FlagInstanceCount, "instance-count", 1,
+		"In single-instance mode, the number of instances to instantiate")
+
 }
